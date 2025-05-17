@@ -19,9 +19,9 @@ class CodeStandardizerApp:
         """Strip code block markers (e.g. ```python ... ```) from LLM responses."""
         if code.startswith("```"):
             lines = code.strip().splitlines()
-            if lines[0].strip("`").lower() == self.supported_languages.lower():
+            if lines[0].strip("`").lower() in self.supported_languages.lower():
                 lines = lines[1:]
-            if lines and lines[-1].strip() == "```":
+            if lines and lines[-1].strip() in "```":
                 lines = lines[:-1]
             return "\n".join(lines)
         return code
