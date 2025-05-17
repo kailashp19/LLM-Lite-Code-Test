@@ -15,11 +15,11 @@ class CodeStandardizerApp:
     st.title("🧠 Grok Code Standardizer & 🧪 Test Runner")
 
     # ========== CLEAN CODE FROM LLM ==========
-    def clean_code_block(self, code: str) -> str:
+    def clean_code_block(self, code: str, language: str) -> str:
         """Strip code block markers (e.g. ```python ... ```) from LLM responses."""
         if code.startswith("```"):
             lines = code.strip().splitlines()
-            if lines[0].strip("`").lower() in self.supported_languages.lower():
+            if lines[0].strip("`").lower() == language.lower():
                 lines = lines[1:]
             if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
@@ -27,7 +27,7 @@ class CodeStandardizerApp:
         return code
 
     # ========== CALL LLM ==========
-    def call_llm(self, system_prompt, user_code, coding_doc=None, user_prompt=None):
+    def call_llm(self, system_prompt, user_code, language, coding_doc=None, user_prompt=None):
         full_user_prompt = ""
 
         if coding_doc:
@@ -35,14 +35,14 @@ class CodeStandardizerApp:
         if user_prompt:
             full_user_prompt += f"{user_prompt}\n\n"
 
-        full_user_prompt += f"### User code in {self.supported_languages}:\n{user_code}\n\n"
+        full_user_prompt += f"### User code in {language}:\n{user_code}\n\n"
 
         full_user_prompt += f"""
-                            You are a professional software engineer. You will be provided with code in {self.supported_languages} and optionally coding standards. 
+                            You are a professional software engineer. You will be provided with code in {language} and optionally coding standards. 
                             Your task is to generate standardized code and/or test cases.
 
                             Instructions:
-                            1. Return only {self.supported_languages} code. No markdown, no extra text.
+                            1. Return only {language} code. No markdown, no extra text.
                             2. If coding standards are provided, follow them strictly.
                             3. Ensure the code can run without modification.
                             """
@@ -62,9 +62,9 @@ class CodeStandardizerApp:
             return ""
 
     # ========== EXECUTE TESTS ==========
-    def run_tests(self, code_str: str, test_str: str) -> str:
+    def run_tests(self, code_str: str, test_str: str, language: str) -> str:
         with tempfile.TemporaryDirectory() as temp_dir:
-            if self.supported_languages.lower() == "python":
+            if language.lower() == "python":
                 code_path = os.path.join(temp_dir, "main.py")
                 test_path = os.path.join(temp_dir, "test_main.py")
 
@@ -76,7 +76,7 @@ class CodeStandardizerApp:
                 result = subprocess.run(["python", test_path], capture_output=True, text=True)
                 return result.stdout + result.stderr
 
-            elif self.supported_languages.lower() == "javascript":
+            elif language.lower() == "javascript":
                 code_path = os.path.join(temp_dir, "main.js")
                 test_path = os.path.join(temp_dir, "test_main.js")
 
@@ -89,7 +89,7 @@ class CodeStandardizerApp:
                 result = subprocess.run(["node", test_path], capture_output=True, text=True)
                 return result.stdout + result.stderr
             else:
-                return f"❌ Language '{self.supported_languages}' is not supported yet."
+                return f"❌ Language '{language}' is not supported yet."
 
     # ========== UI ==========
     def render_app(self):
@@ -118,8 +118,8 @@ class CodeStandardizerApp:
             if not user_code or not system_prompt:
                 st.warning("⚠️ Please provide both code and system prompt.")
             else:
-                raw_code = self.call_llm(system_prompt, user_code, coding_doc=coding_doc_content, user_prompt=user_prompt)
-                clean_code = self.clean_code_block(raw_code)
+                raw_code = self.call_llm(system_prompt, user_code, language, coding_doc=coding_doc_content, user_prompt=user_prompt)
+                clean_code = self.clean_code_block(raw_code, language)
                 st.session_state["standardized_code"] = clean_code
 
                 st.subheader("🧼 Standardized Code")
