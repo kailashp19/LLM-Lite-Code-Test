@@ -140,3 +140,30 @@ class CodeStandardizerApp:
                 st.subheader("📊 Test Execution Report")
                 result = self.run_tests(st.session_state["standardized_code"], clean_tests, language)
                 st.text(result)
+
+    def login(self):
+        st.title("🔐 Secure Code Access")
+        email = st.text_input("Email", placeholder="Enter your email")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+
+        if st.button("Login"):
+            if email and password:
+                st.session_state["logged_in"] = True
+                st.session_state["user_email"] = email
+                st.rerun()
+            else:
+                st.warning("Please enter both email and password.")
+    
+    def run(self):
+        if "logged_in" not in st.session_state:
+            st.session_state["logged_in"] = False
+
+        if not st.session_state["logged_in"]:
+            self.login()
+        else:
+            self.render_app()
+
+# Run the app
+if __name__ == "__main__":
+    app = CodeStandardizerApp()
+    app.run()
