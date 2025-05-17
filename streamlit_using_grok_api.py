@@ -21,7 +21,7 @@ class CodeStandardizerApp:
             lines = code.strip().splitlines()
             if lines[0].strip("`").lower() in self.supported_languages.lower():
                 lines = lines[1:]
-            if lines and lines[-1].strip() in "```":
+            if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
             return "\n".join(lines)
         return code
