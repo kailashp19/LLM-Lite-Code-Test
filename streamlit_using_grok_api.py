@@ -118,8 +118,8 @@ class CodeStandardizerApp:
             if not user_code or not system_prompt:
                 st.warning("⚠️ Please provide both code and system prompt.")
             else:
-                raw_code = self.call_llm(system_prompt, user_code, language, coding_doc=coding_doc_content, user_prompt=user_prompt)
-                clean_code = self.clean_code_block(raw_code, language)
+                raw_code = self.call_llm(system_prompt, user_code, coding_doc=coding_doc_content, user_prompt=user_prompt)
+                clean_code = self.clean_code_block(raw_code)
                 st.session_state["standardized_code"] = clean_code
 
                 st.subheader("🧼 Standardized Code")
