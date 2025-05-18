@@ -65,45 +65,33 @@ class CodeStandardizerApp:
 
     # ========== EXECUTE TESTS ==========
     def run_tests(self, code_str: str, test_str: str, language: str) -> str:
-        lang_map = {
-            "python": "python3",
-            "javascript": "javascript",
-            "java": "java",
-            "c": "c",
-            "c++": "cpp"
-        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            if language.lower() == "python":
+                code_path = os.path.join(temp_dir, "main.py")
+                test_path = os.path.join(temp_dir, "test_main.py")
 
-        piston_lang = lang_map.get(language.lower())
-        if not piston_lang:
-            return f"❌ Language '{language}' is not supported by the remote runner."
+                with open(code_path, "w") as f:
+                    f.write(code_str)
+                with open(test_path, "w") as f:
+                    f.write(test_str)
 
-        # Combine code and test cases
-        if language.lower() == "python":
-            full_code = f"{code_str}\n\n{test_str}"
-        elif language.lower() == "javascript":
-            full_code = f"{code_str}\n\n{test_str}"
-        else:
-            return f"❌ Automated test execution for {language} is not yet implemented."
+                result = subprocess.run(["python", test_path], capture_output=True, text=True)
+                return result.stdout + result.stderr
 
-        try:
-            response = requests.post(
-                "https://emkc.org/api/v2/piston/execute",  # public instance
-                headers={"Content-Type": "application/json"},
-                data=json.dumps({
-                    "language": piston_lang,
-                    "version": "*",
-                    "files": [{"name": "main", "content": full_code}],
-                }),
-                timeout=10
-            )
-            if response.status_code == 200:
-                result = response.json()
-                output = result.get("output", "")
-                return output
+            elif language.lower() == "javascript":
+                code_path = os.path.join(temp_dir, "main.js")
+                test_path = os.path.join(temp_dir, "test_main.js")
+
+                with open(code_path, "w") as f:
+                    f.write(code_str)
+                with open(test_path, "w") as f:
+                    f.write(f"const {{ fibonacci }} = require('./main');\n\n")
+                    f.write(test_str)
+
+                result = subprocess.run(["node", test_path], capture_output=True, text=True)
+                return result.stdout + result.stderr
             else:
-                return f"❌ Remote execution failed with status {response.status_code}"
-        except Exception as e:
-            return f"❌ Remote execution error: {e}"
+                return f"❌ Language '{language}' is not supported yet."
 
     # ========== UI ==========
     def render_app(self):
